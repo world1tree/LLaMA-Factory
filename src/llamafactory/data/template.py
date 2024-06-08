@@ -85,6 +85,7 @@ class Template:
             elements = []
             if i == 0 and (system or tools or self.force_system):
                 tool_text = self.format_tools.apply(content=tools)[0] if tools else ""
+                # 这里不知道format_system具体是哪个实现
                 elements += self.format_system.apply(content=(system + tool_text))
             elif i > 0 and i % 2 == 0:
                 elements += self.format_separator.apply()
@@ -612,6 +613,7 @@ _register_template(
 )
 
 
+# base模型未必需要使用default, 也可以使用empty
 _register_template(
     name="default",
     format_user=StringFormatter(slots=["Human: {{content}}\nAssistant: "]),
@@ -708,7 +710,7 @@ _register_template(
     default_system="You are a helpful assistant. 你是一个乐于助人的助手。",
 )
 
-
+# 用于chat补全
 _register_template(
     name="llama3",
     format_user=StringFormatter(
@@ -719,6 +721,7 @@ _register_template(
             )
         ]
     ),
+    # 参考https://github.com/meta-llama/llama3/blob/main/llama/tokenizer.py
     format_system=StringFormatter(
         slots=[{"bos_token"}, "<|start_header_id|>system<|end_header_id|>\n\n{{content}}<|eot_id|>"]
     ),

@@ -231,6 +231,7 @@ def init_adapter(
             if model_args.use_unsloth:
                 model = get_unsloth_peft_model(model, model_args, peft_kwargs)
             else:
+                # LoraConfig
                 lora_config = LoraConfig(
                     task_type=TaskType.CAUSAL_LM,
                     inference_mode=False,

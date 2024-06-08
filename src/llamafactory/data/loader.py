@@ -111,6 +111,7 @@ def load_single_dataset(
         target_num = dataset_attr.num_samples
         indexes = np.random.permutation(len(dataset))[:target_num]
         target_num -= len(indexes)
+        # 如果采样数指定过大，可以从原数据集中重复采样
         if target_num > 0:
             expand_indexes = np.random.choice(len(dataset), target_num)
             indexes = np.concatenate((indexes, expand_indexes), axis=0)
@@ -119,10 +120,12 @@ def load_single_dataset(
         dataset = dataset.select(indexes)
         logger.info("Sampled {} examples from dataset {}.".format(dataset_attr.num_samples, dataset_attr))
 
+    # 可以指定最大采样数
     if data_args.max_samples is not None:  # truncate dataset
         indexes = np.random.permutation(len(dataset))[: data_args.max_samples]
         dataset = dataset.select(indexes)
 
+    # 这里会把原本文件的格式转换成标准格式
     return align_dataset(dataset, dataset_attr, data_args)
 
 
@@ -164,6 +167,11 @@ def get_dataset(
         preprocess_func, print_function = get_preprocess_and_print_func(
             data_args, training_args, stage, template, tokenizer, processor
         )
+        # {
+        #   prompt: [{"role": "user", "content": instruction + '\n' + input}, ...],
+        #   response: [{"role": "assistant", "content": output}, ..., ],
+        #   ...
+        # }
         column_names = list(next(iter(dataset)).keys())
         kwargs = {}
         if not data_args.streaming:

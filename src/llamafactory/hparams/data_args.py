@@ -32,6 +32,7 @@ class DataArguments:
         default=1,
         metadata={"help": "The minimum cutoff length reserved for the tokenized labels in the dataset."},
     )
+    # True表示会计算prompt的loss
     train_on_prompt: bool = field(
         default=False,
         metadata={"help": "Whether to disable the mask on the prompt or not."},

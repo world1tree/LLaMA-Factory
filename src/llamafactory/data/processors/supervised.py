@@ -31,6 +31,11 @@ def preprocess_supervised_dataset(
         if hasattr(processor, "image_seq_length"):  # paligemma models
             model_inputs["token_type_ids"] = []
 
+    # {
+    #   prompt: [ [{"role": "user", "content": instruction + '\n' + input}], ... ],
+    #   response: [ [{"role": "assistant", "content": output}], ... ],
+    #   ...
+    # }
     for i in range(len(examples["prompt"])):
         if len(examples["prompt"][i]) % 2 != 1 or len(examples["response"][i]) != 1:
             logger.warning("Dropped invalid example: {}".format(examples["prompt"][i] + examples["response"][i]))
@@ -38,7 +43,8 @@ def preprocess_supervised_dataset(
 
         if processor is not None and not hasattr(processor, "image_seq_length"):  # llava-like models
             examples["prompt"][i][0]["content"] = template.image_token + examples["prompt"][i][0]["content"]
-
+        # list + list
+        # 只有一条信息
         messages = examples["prompt"][i] + examples["response"][i]
         input_ids, labels = [], []
 
@@ -47,6 +53,7 @@ def preprocess_supervised_dataset(
             input_ids += [image_token_id] * getattr(processor, "image_seq_length")
             labels += [IGNORE_INDEX] * getattr(processor, "image_seq_length")
 
+        # 数据在这里处理成tensor
         for turn_idx, (source_ids, target_ids) in enumerate(
             template.encode_multiturn(
                 tokenizer,

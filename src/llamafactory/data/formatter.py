@@ -110,6 +110,7 @@ class StringFormatter(Formatter):
     def apply(self, **kwargs) -> SLOTS:
         elements = []
         for slot in self.slots:
+            # slot可能是str
             if isinstance(slot, str):
                 for name, value in kwargs.items():
                     if not isinstance(value, str):
@@ -117,6 +118,7 @@ class StringFormatter(Formatter):
 
                     slot = slot.replace("{{" + name + "}}", value, 1)
                 elements.append(slot)
+            # slot可能是set[str]或dict[str, str], 原封不动
             elif isinstance(slot, (dict, set)):
                 elements.append(slot)
             else:

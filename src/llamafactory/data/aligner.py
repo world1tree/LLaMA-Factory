@@ -39,6 +39,9 @@ def convert_alpaca(
     r"""
     Converts alpaca format dataset to the standard format.
     """
+    # prompt => instruction
+    # query => input
+    # response => output
     outputs = {"prompt": [], "response": [], "system": [], "tools": [], "images": []}
     convert_images = partial(_convert_images, dataset_attr=dataset_attr, data_args=data_args)
     for i in range(len(examples[dataset_attr.prompt])):
@@ -50,11 +53,13 @@ def convert_alpaca(
 
         content = []
         if dataset_attr.prompt and examples[dataset_attr.prompt][i]:
+            # instruction加入list
             content.append(examples[dataset_attr.prompt][i])
 
         if dataset_attr.query and examples[dataset_attr.query][i]:
+            # input加入list
             content.append(examples[dataset_attr.query][i])
-
+        # 最终prompt格式为{"role": "user", "content": instruction + '\n' + input}
         prompt.append({"role": Role.USER.value, "content": "\n".join(content)})  # "prompt\nquery"
 
         if dataset_attr.kto_tag and isinstance(examples[dataset_attr.kto_tag][i], bool):  # kto example
@@ -73,6 +78,7 @@ def convert_alpaca(
                 {"role": Role.ASSISTANT.value, "content": examples[dataset_attr.rejected][i]},
             ]
         elif dataset_attr.response and isinstance(examples[dataset_attr.response][i], str):  # normal example
+            # 最终response格式为{"role": "assistant", "content": output}
             response = [{"role": Role.ASSISTANT.value, "content": examples[dataset_attr.response][i]}]
         else:  # unsupervised
             response = []
@@ -82,6 +88,10 @@ def convert_alpaca(
         outputs["system"].append(examples[dataset_attr.system][i] if dataset_attr.system else "")
         outputs["tools"].append(examples[dataset_attr.tools][i] if dataset_attr.tools else "")
         outputs["images"].append(convert_images(examples[dataset_attr.images][i]) if dataset_attr.images else [])
+    # {
+    #   prompt: [{"role": "user", "content": instruction + '\n' + input}, ...],
+    #   response: [{"role": "assistant", "content": output}, ..., ],
+    # }
 
     return outputs
 
@@ -95,11 +105,11 @@ def convert_sharegpt(
     outputs = {"prompt": [], "response": [], "system": [], "tools": [], "images": []}
     convert_images = partial(_convert_images, dataset_attr=dataset_attr, data_args=data_args)
     tag_mapping = {
-        dataset_attr.user_tag: Role.USER.value,
-        dataset_attr.assistant_tag: Role.ASSISTANT.value,
-        dataset_attr.observation_tag: Role.OBSERVATION.value,
-        dataset_attr.function_tag: Role.FUNCTION.value,
-        dataset_attr.system_tag: Role.SYSTEM.value,
+        dataset_attr.user_tag: Role.USER.value, # "user"
+        dataset_attr.assistant_tag: Role.ASSISTANT.value, # "assistant"
+        dataset_attr.observation_tag: Role.OBSERVATION.value, # "observation"
+        dataset_attr.function_tag: Role.FUNCTION.value, # "function"
+        dataset_attr.system_tag: Role.SYSTEM.value,    # "system"
     }
     odd_tags = (dataset_attr.user_tag, dataset_attr.observation_tag)
     even_tags = (dataset_attr.assistant_tag, dataset_attr.function_tag)
@@ -185,6 +195,7 @@ def align_dataset(
         tools: "...",
         images: [],
     """
+    # 就是alpaca
     if dataset_attr.formatting == "alpaca":
         convert_func = partial(convert_alpaca, dataset_attr=dataset_attr, data_args=data_args)
     else:
@@ -212,6 +223,8 @@ def align_dataset(
             desc="Converting format of dataset",
         )
 
+    # dataset中一条数据格式为{"instruction": "", "input": "", "output": "", "history", []}
+    # 会转为新的数据格式
     return dataset.map(
         convert_func,
         batched=True,

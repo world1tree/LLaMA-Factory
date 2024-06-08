@@ -49,6 +49,7 @@ def load_tokenizer(model_args: "ModelArguments") -> "TokenizerModule":
     Note: including inplace operation of model_args.
     """
     init_kwargs = _get_init_kwargs(model_args)
+    # 从huggingface初始化tokenizer
     try:
         tokenizer = AutoTokenizer.from_pretrained(
             model_args.model_name_or_path,
@@ -141,6 +142,7 @@ def load_model(
         patch_model(model, tokenizer, model_args, is_trainable, add_valuehead)
         register_autoclass(config, model, tokenizer)
 
+    # 初始化adapter, 例如lora
     model = init_adapter(config, model, model_args, finetuning_args, is_trainable)
 
     if add_valuehead:

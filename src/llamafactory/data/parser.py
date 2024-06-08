@@ -103,10 +103,24 @@ def get_dataset_list(data_args: "DataArguments") -> List["DatasetAttr"]:
         else:
             dataset_attr = DatasetAttr("file", dataset_name=dataset_info[name]["file_name"])
 
+        # dataset_info[name]是一个字典
+        # "refine-test": {
+        #     "file_name": "refine/refine_test.json",
+        #     "columns": {
+        #         "prompt": "instruction",
+        #         "query": "input",
+        #         "response": "output"
+        #     }
+        # }
+        # alpaca
         dataset_attr.set_attr("formatting", dataset_info[name], default="alpaca")
+        # None
         dataset_attr.set_attr("ranking", dataset_info[name], default=False)
+        # None
         dataset_attr.set_attr("subset", dataset_info[name])
+        # None
         dataset_attr.set_attr("folder", dataset_info[name])
+        # None
         dataset_attr.set_attr("num_samples", dataset_info[name])
 
         if "columns" in dataset_info[name]:
@@ -115,7 +129,20 @@ def get_dataset_list(data_args: "DataArguments") -> List["DatasetAttr"]:
                 column_names.extend(["prompt", "query", "response", "history"])
             else:
                 column_names.extend(["messages"])
-
+            # {
+            #         "prompt": "instruction",
+            #         "query": "input",
+            #         "response": "output"
+            # }
+            # system = None
+            # toosl = None
+            # images = None
+            # rejected = None
+            # kto_tag = None
+            # prompt = instruction
+            # query = input
+            # response = output
+            # history = None
             for column_name in column_names:
                 dataset_attr.set_attr(column_name, dataset_info[name]["columns"])
 
