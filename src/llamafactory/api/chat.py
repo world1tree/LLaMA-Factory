@@ -98,7 +98,11 @@ def _process_request(
 
                     image = Image.open(image_path).convert("RGB")
         else:
-            input_messages.append({"role": ROLE_MAPPING[message.role], "content": message.content})
+            if " ||| " in message.content:
+                p, c = message.content.split(' ||| ')
+            else:
+                p, c = message.content, ""
+            input_messages.append({"role": ROLE_MAPPING[message.role], "content": p, "prefix": c})
 
     tool_list = request.tools
     if isinstance(tool_list, list) and len(tool_list):

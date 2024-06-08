@@ -90,7 +90,10 @@ class Template:
                 elements += self.format_separator.apply()
 
             if message["role"] == Role.USER.value:
-                elements += self.format_user.apply(content=message["content"], idx=str(i // 2))
+                if "prefix" in message:
+                    elements += self.format_user.apply(content=message["content"], idx=str(i // 2), prefix=message["prefix"])
+                else:
+                    elements += self.format_user.apply(content=message["content"], idx=str(i // 2))
             elif message["role"] == Role.ASSISTANT.value:
                 elements += self.format_assistant.apply(content=message["content"])
             elif message["role"] == Role.OBSERVATION.value:
@@ -100,7 +103,10 @@ class Template:
             else:
                 raise NotImplementedError("Unexpected role: {}".format(message["role"]))
 
+            print(elements, flush=True)
+
             encoded_messages.append(self._convert_elements_to_ids(tokenizer, elements))
+        print("Record End.", flush=True)
 
         return self._make_pairs(encoded_messages, cutoff_len, reserved_label_len)
 
@@ -720,6 +726,32 @@ _register_template(
             (
                 "<|start_header_id|>user<|end_header_id|>\n\n{{content}}<|eot_id|>"
                 "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    format_system=StringFormatter(
+        slots=[{"bos_token"}, "<|start_header_id|>system<|end_header_id|>\n\n{{content}}<|eot_id|>"]
+    ),
+    format_observation=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>tool<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    default_system="You are a helpful assistant.",
+    stop_words=["<|eot_id|>"],
+    replace_eos=True,
+)
+
+_register_template(
+    name="llama3-csw",
+    format_user=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>user<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>assistant<|end_header_id|>\n\n{{prefix}}"
             )
         ]
     ),
